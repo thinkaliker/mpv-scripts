@@ -2,8 +2,6 @@
 
 - visualizer.lua - various audio visualization.
 
-Add --script-opts=vis-force=yes to force the visualizer to cycle through different visualizers including the original video
-
 - firequalizer.lua - linear phase 15-bands equalizer.
 
 ## Key bindings

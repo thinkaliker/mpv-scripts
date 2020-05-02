@@ -1,13 +1,13 @@
 -- various audio visualization
 
 local opts = {
-    mode = "novideo",
+    mode = "off",
     -- off              disable visualization
     -- noalbumart       enable visualization when no albumart and no video
     -- novideo          enable visualization when no video
     -- force            always enable visualization
 
-    name = "showcqtbar",
+    name = "off",
     -- off
     -- showcqt
     -- avectorscope
@@ -28,23 +28,26 @@ local opts = {
 
 local force_opt = {
     force = false,
+    default = "off"
 }
 
 -- key bindings
 -- cycle visualizer
 local cycle_key = "c"
 
+local no_vid = false
+
 if not (mp.get_property("options/lavfi-complex", "") == "") then
     return
 end
 
 local visualizer_name_list = {
-    "off",
+    "showcqtbar",
     "showcqt",
     "avectorscope",
     "showspectrum",
-    "showcqtbar",
     "showwaves",
+    "off",
 }
 
 local options = require 'mp.options'
@@ -55,10 +58,15 @@ opts.height = math.min(12, math.max(4, opts.height))
 opts.height = math.floor(opts.height)
 
 read_options(force_opt, "vis")
-print("Force:", type(force_opt.force))
-if force_opt.force == true then
+if force_opt.force == "yes" then
     print("vis: forcing visualization")
     opts.mode = "force"
+    print(opts.mode)
+end
+if force_opt.default == "off" then
+    print("vis: default set to off")
+    opts.mode = "off"
+    print(opts.mode)
 end
 
 local function get_visualizer(name, quality)
@@ -159,7 +167,7 @@ local function get_visualizer(name, quality)
                 "bar_g          = 2:" ..
                 "sono_g         = 4:" ..
                 "bar_v          = 9:" ..
-                "sono_v         = 1000:" ..
+                "sono_v         = 100:" ..
                 "sono_h         = 0:" ..
                 "bar_t          = 0.1:" ..
                 "axis           = 0:" ..
@@ -183,7 +191,7 @@ local function get_visualizer(name, quality)
                 "bar_g          = 2:" ..
                 "sono_g         = 4:" ..
                 "bar_v          = 9:" ..
-                "sono_v         = 1000:" ..
+                "sono_v         = 100:" ..
                 "sono_h         = 0:" ..
                 "bar_t          = 0.1:" ..
                 "axis           = 0:" ..
@@ -204,7 +212,11 @@ local function get_visualizer(name, quality)
                 "mode           = p2p," ..
             "format             = rgb0 [vo]"
     elseif name == "off" then
-        return "[aid1] afifo [ao]; [vid1] fifo [vo]"
+        if no_vid == false then
+            return "[aid1] afifo [ao]; [vid1] fifo [vo]"
+        elseif no_vid == true then
+            return "[aid1] afifo [ao]"
+        end
     end
 
     msg.log("error", "invalid visualizer name")
@@ -213,7 +225,12 @@ end
 
 local function select_visualizer(atrack, vtrack, albumart)
     if opts.mode == "off" then
-        return ""
+        if albumart == 0 and vtrack == 0 then
+            -- visualizer_name_list = table.remove(visualizer_name_list)
+            opts.name = "showcqtbar"
+            no_vid = true
+        end
+        return get_visualizer(opts.name, opts.quality)
     elseif opts.mode == "force" then
         return get_visualizer(opts.name, opts.quality)
     elseif opts.mode == "noalbumart" then
