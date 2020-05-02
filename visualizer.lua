@@ -1,7 +1,7 @@
 -- various audio visualization
 
 local opts = {
-    mode = "force",
+    mode = "novideo",
     -- off              disable visualization
     -- noalbumart       enable visualization when no albumart and no video
     -- novideo          enable visualization when no video
@@ -24,6 +24,10 @@ local opts = {
 
     height = 6,
     -- [4 .. 12]
+}
+
+local force_opt = {
+    force = false,
 }
 
 -- key bindings
@@ -49,6 +53,13 @@ local msg     = require 'mp.msg'
 options.read_options(opts)
 opts.height = math.min(12, math.max(4, opts.height))
 opts.height = math.floor(opts.height)
+
+read_options(force_opt, "vis")
+print("Force:", type(force_opt.force))
+if force_opt.force == true then
+    print("vis: forcing visualization")
+    opts.mode = "force"
+end
 
 local function get_visualizer(name, quality)
     local w, h, fps
@@ -193,7 +204,7 @@ local function get_visualizer(name, quality)
                 "mode           = p2p," ..
             "format             = rgb0 [vo]"
     elseif name == "off" then
-        return "[aid1] afifo [ao]"
+        return "[aid1] afifo [ao]; [vid1] fifo [vo]"
     end
 
     msg.log("error", "invalid visualizer name")
